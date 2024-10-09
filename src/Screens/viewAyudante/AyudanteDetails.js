@@ -1,12 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAyudantes } from '../../../context/AyudanteContext/AyudanteContext';
+import AssignTasksModal from '../../../components/AssignTasksModal';
 
 export default function AyudanteDetails({ route }) {
   const { ayudante } = route.params;
   const navigation = useNavigation();
-  const { deleteAyudante, disableAyudante } = useAyudantes();
+  const { deleteAyudante, disableAyudante, updateAyudante } = useAyudantes();
+  const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
+  const [currentAyudante, setCurrentAyudante] = useState(ayudante);
 
   const handleDelete = () => {
     Alert.alert(
@@ -39,22 +42,26 @@ export default function AyudanteDetails({ route }) {
     }
   };
 
+  const handleAyudanteUpdate = (updatedAyudante) => {
+    setCurrentAyudante(updatedAyudante);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{ayudante.nombre}</Text>
-      <Text style={styles.details}>Tipo de Documento: {ayudante.tipoDocumento}</Text>
-      <Text style={styles.details}>Identificación: {ayudante.identificacion}</Text>
-      <Text style={styles.details}>Teléfono: {ayudante.telefono}</Text>
-      <Text style={styles.details}>Rol: {ayudante.rol}</Text>
-      <Text style={styles.details}>Dirección: {ayudante.direccion}</Text>
-      <Text style={styles.details}>Correo Electrónico: {ayudante.correoElectronico || 'No especificado'}</Text>
-      <Text style={styles.details}>Institución: {ayudante.institucion}</Text>
-      <Text style={styles.details}>Estado: {ayudante.estado}</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>{currentAyudante.nombre}</Text>
+      <Text style={styles.details}>Tipo de Documento: {currentAyudante.tipoDocumento}</Text>
+      <Text style={styles.details}>Identificación: {currentAyudante.identificacion}</Text>
+      <Text style={styles.details}>Teléfono: {currentAyudante.telefono}</Text>
+      <Text style={styles.details}>Rol: {currentAyudante.rol}</Text>
+      <Text style={styles.details}>Dirección: {currentAyudante.direccion}</Text>
+      <Text style={styles.details}>Correo Electrónico: {currentAyudante.correoElectronico || 'No especificado'}</Text>
+      <Text style={styles.details}>Institución: {currentAyudante.institucion}</Text>
+      <Text style={styles.details}>Estado: {currentAyudante.estado}</Text>
       
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.editButton]}
-          onPress={() => navigation.navigate('AyudanteForm', { ayudante })}
+          onPress={() => navigation.navigate('AyudanteForm', { ayudante: currentAyudante })}
         >
           <Text style={styles.buttonText}>Editar</Text>
         </TouchableOpacity>
@@ -64,7 +71,7 @@ export default function AyudanteDetails({ route }) {
           onPress={handleToggleStatus}
         >
           <Text style={styles.buttonText}>
-            {ayudante.estado === 'activo' ? 'Desactivar' : 'Activar'}
+            {currentAyudante.estado === 'activo' ? 'Desactivar' : 'Activar'}
           </Text>
         </TouchableOpacity>
         
@@ -75,7 +82,34 @@ export default function AyudanteDetails({ route }) {
           <Text style={styles.buttonText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
-    </View>
+
+      <TouchableOpacity
+        style={[styles.button, styles.assignButton]}
+        onPress={() => setIsAssignModalVisible(true)}
+      >
+        <Text style={styles.buttonText}>Asignar Tareas</Text>
+      </TouchableOpacity>
+
+      <AssignTasksModal
+        visible={isAssignModalVisible}
+        onClose={() => setIsAssignModalVisible(false)}
+        ayudante={currentAyudante}
+        onUpdate={handleAyudanteUpdate}
+      />
+
+      {currentAyudante.tareasAsignadas && currentAyudante.tareasAsignadas.length > 0 && (
+        <View style={styles.assignedTasksContainer}>
+          <Text style={styles.assignedTasksTitle}>Tareas Asignadas:</Text>
+          {currentAyudante.tareasAsignadas.map((task, index) => (
+            <View key={index} style={styles.assignedTaskItem}>
+              <Text style={styles.assignedTaskName}>{task.tarea.nombre}</Text>
+              <Text style={styles.assignedTaskDetails}>Horas: {task.horas}</Text>
+              <Text style={styles.assignedTaskDetails}>Estado: {task.estado}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
@@ -98,6 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
+    marginBottom: 10,
   },
   button: {
     padding: 10,
@@ -115,8 +150,33 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#F44336',
   },
+  assignButton: {
+    backgroundColor: '#2196F3',
+    marginTop: 10,
+  },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  assignedTasksContainer: {
+    marginTop: 20,
+  },
+  assignedTasksTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  assignedTaskItem: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  assignedTaskName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  assignedTaskDetails: {
+    fontSize: 14,
   },
 });
