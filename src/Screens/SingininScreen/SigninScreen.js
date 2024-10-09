@@ -6,9 +6,9 @@ import {
   useWindowDimensions,
 } from "react-native";
 import React, { useState } from "react";
-import Logo from "../../assets/images/logoums.png";
-import { CustomInput } from "../../components";
-import { CustomButton } from "../../components";
+import Logo from "../../../assets/images/logoums.png";
+import { CustomInput } from "../../../components";
+import { CustomButton } from "../../../components";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
