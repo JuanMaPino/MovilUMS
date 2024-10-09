@@ -1,28 +1,27 @@
-// src/Screens/ListarAyudantes/AyudantesList.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAyudantes } from '../../../context/AyudanteContext/AyudanteContext'; // Asegúrate de importar el contexto
+import { useAyudantes } from '../../../context/AyudanteContext/AyudanteContext';
 
-export default function AyudantesList() {
+export default function AyudanteList() {
   const navigation = useNavigation();
-  const { ayudantes, fetchAyudantes, loading, error } = useAyudantes(); // Asegúrate de tener esta función en tu contexto
+  const { ayudantes, getAllAyudantes, loading, error } = useAyudantes();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchAyudantes(); // Cargar los ayudantes al montar el componente
+    getAllAyudantes();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAyudantes();
+    await getAllAyudantes();
     setRefreshing(false);
   };
 
   const renderAyudante = ({ item }) => (
     <TouchableOpacity
       style={styles.ayudanteItem}
-      onPress={() => navigation.navigate('AyudanteDetails', { ayudante: item })} // Cambia a tu pantalla de detalles
+      onPress={() => navigation.navigate('AyudanteDetails', { ayudante: item })}
     >
       <View>
         <Text style={styles.ayudanteName}>{item.nombre}</Text>
@@ -62,14 +61,13 @@ export default function AyudantesList() {
       />
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('AyudanteForm')} // Cambia a tu formulario de ayudante
+        onPress={() => navigation.navigate('AyudanteForm')}
       >
         <Text style={styles.addButtonText}>Agregar Ayudante</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

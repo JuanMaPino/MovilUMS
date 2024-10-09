@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAyudantes } from '../../../context/AyudanteContext/AyudanteContext';
+import { Picker } from '@react-native-picker/picker';
 
 export default function AyudanteForm() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { createAyudante, updateAyudante } = useAyudantes();
+  const { createAyudante, updateAyudante, ayudantes } = useAyudantes();
   const [formData, setFormData] = useState({
     tipoDocumento: 'C.C',
     identificacion: '',
@@ -42,27 +43,62 @@ export default function AyudanteForm() {
     validateField(name, value);
   };
 
+  const checkIfExists = (identificacion) => {
+    return ayudantes.some(ayudante => {
+      if (ayudante.identificacion && identificacion) {
+        return ayudante.identificacion.toString().toLowerCase().trim() === identificacion.toString().toLowerCase().trim();
+      }
+      return false;
+    });
+  };
+
   const validateField = (name, value) => {
     let errorMessage = '';
 
     switch (name) {
       case 'identificacion':
-        errorMessage = !value ? 'Este campo es obligatorio' : !/^\d{8,10}$/.test(value) ? 'El documento debe contener entre 8 y 10 dígitos' : '';
+        if (!value) {
+          errorMessage = 'Este campo es obligatorio';
+        } else if (!/^\d{8,10}$/.test(value)) {
+          errorMessage = 'El documento debe contener entre 8 y 10 dígitos numéricos';
+        } else if (checkIfExists(value)) {
+          errorMessage = 'El ayudante ya existe.';
+        }
         break;
       case 'nombre':
-        errorMessage = !value ? 'Este campo es obligatorio' : !/^[a-zA-Z\s]+$/.test(value) ? 'El nombre solo debe contener letras y espacios' : '';
+        if (!value) {
+          errorMessage = 'Este campo es obligatorio';
+        } else if (!/^[a-zA-Z\s]+$/.test(value)) {
+          errorMessage = 'El nombre solo debe contener letras y espacios';
+        }
         break;
       case 'telefono':
-        errorMessage = !value ? 'Este campo es obligatorio' : value.toString().length !== 10 ? 'El teléfono debe tener 10 dígitos' : '';
+        if (!value) {
+          errorMessage = 'Este campo es obligatorio';
+        } else if (value.toString().length !== 10) {
+          errorMessage = 'El teléfono debe tener 10 dígitos numéricos';
+        }
         break;
       case 'correoElectronico':
-        errorMessage = value && !/.+@.+\..+/.test(value) ? 'Ingrese un correo electrónico válido' : '';
+        if (value && !/.+@.+\..+/.test(value)) {
+          errorMessage = 'Ingrese un correo electrónico válido';
+        }
         break;
       case 'direccion':
-        errorMessage = !value ? 'Este campo es obligatorio' : value.length < 5 ? 'La dirección debe tener al menos 5 caracteres' : '';
+        if (!value) {
+          errorMessage = 'Este campo es obligatorio';
+        } else if (value.length < 5) {
+          errorMessage = 'La dirección debe tener al menos 5 caracteres';
+        } else if (!/^[a-zA-Z0-9#\-\s]+$/.test(value)) {
+          errorMessage = 'La dirección solo debe contener letras, números, numeral, guion medio y espacios';
+        }
         break;
       case 'institucion':
-        errorMessage = !value ? 'Este campo es obligatorio' : value.length < 5 ? 'La institución debe tener al menos 5 caracteres' : '';
+        if (!value) {
+          errorMessage = 'Este campo es obligatorio';
+        } else if (value.length < 5) {
+          errorMessage = 'La institución debe tener al menos 5 caracteres';
+        }
         break;
       default:
         break;
@@ -101,11 +137,14 @@ export default function AyudanteForm() {
       <ScrollView>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Tipo de Documento</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.tipoDocumento}
-            onChangeText={(text) => handleChange('tipoDocumento', text)}
-          />
+          <Picker
+            selectedValue={formData.tipoDocumento}
+            onValueChange={(itemValue) => handleChange('tipoDocumento', itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="C.C" value="C.C" />
+            <Picker.Item label="T.I" value="T.I" />
+          </Picker>
         </View>
 
         <View style={styles.formGroup}>
@@ -115,6 +154,7 @@ export default function AyudanteForm() {
             value={formData.identificacion}
             onChangeText={(text) => handleChange('identificacion', text)}
             placeholder="Número de identificación"
+            keyboardType="numeric"
           />
           {errors.identificacion && <Text style={styles.errorText}>{errors.identificacion}</Text>}
         </View>
@@ -137,19 +177,21 @@ export default function AyudanteForm() {
             value={formData.telefono}
             onChangeText={(text) => handleChange('telefono', text)}
             placeholder="Teléfono del ayudante"
-            keyboardType="numeric"
+            keyboardType="phone-pad"
           />
           {errors.telefono && <Text style={styles.errorText}>{errors.telefono}</Text>}
         </View>
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Rol <Text style={styles.required}>*</Text></Text>
-          <TextInput
-            style={styles.input}
-            value={formData.rol}
-            onChangeText={(text) => handleChange('rol', text)}
-            placeholder="Rol del ayudante"
-          />
+          <Picker
+            selectedValue={formData.rol}
+            onValueChange={(itemValue) => handleChange('rol', itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Alfabetizador" value="alfabetizador" />
+            <Picker.Item label="Voluntario" value="voluntario" />
+          </Picker>
         </View>
 
         <View style={styles.formGroup}>
@@ -233,6 +275,11 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 14,
     marginTop: 5,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 6,
   },
   buttonContainer: {
     flexDirection: 'row',
