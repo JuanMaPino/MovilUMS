@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAyudantes } from '../../../context/AyudanteContext/AyudanteContext';
@@ -10,6 +10,10 @@ export default function AyudanteDetails({ route }) {
   const { deleteAyudante, disableAyudante, updateAyudante } = useAyudantes();
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
   const [currentAyudante, setCurrentAyudante] = useState(ayudante);
+
+  useEffect(() => {
+    setCurrentAyudante(ayudante);
+  }, [ayudante]);
 
   const handleDelete = () => {
     Alert.alert(
@@ -44,6 +48,7 @@ export default function AyudanteDetails({ route }) {
 
   const handleAyudanteUpdate = (updatedAyudante) => {
     setCurrentAyudante(updatedAyudante);
+    navigation.setParams({ ayudante: updatedAyudante });
   };
 
   return (
@@ -97,18 +102,19 @@ export default function AyudanteDetails({ route }) {
         onUpdate={handleAyudanteUpdate}
       />
 
-      {currentAyudante.tareasAsignadas && currentAyudante.tareasAsignadas.length > 0 && (
-        <View style={styles.assignedTasksContainer}>
-          <Text style={styles.assignedTasksTitle}>Tareas Asignadas:</Text>
-          {currentAyudante.tareasAsignadas.map((task, index) => (
+{currentAyudante.tareasAsignadas && currentAyudante.tareasAsignadas.length > 0 && (
+    <View style={styles.assignedTasksContainer}>
+        <Text style={styles.assignedTasksTitle}>Tareas Asignadas:</Text>
+        {currentAyudante.tareasAsignadas.map((task, index) => (
             <View key={index} style={styles.assignedTaskItem}>
-              <Text style={styles.assignedTaskName}>{task.tarea.nombre}</Text>
-              <Text style={styles.assignedTaskDetails}>Horas: {task.horas}</Text>
-              <Text style={styles.assignedTaskDetails}>Estado: {task.estado}</Text>
+                <Text style={styles.assignedTaskName}>{task.nombre || 'Tarea sin nombre'}</Text>
+                <Text style={styles.assignedTaskDetails}>Horas: {task.horas}</Text>
+                <Text style={styles.assignedTaskDetails}>proceso: {task.proceso}</Text>
             </View>
-          ))}
-        </View>
-      )}
+        ))}
+    </View>
+)}
+
     </ScrollView>
   );
 }

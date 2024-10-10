@@ -36,8 +36,8 @@ const AssignTasksModal = ({ visible, onClose, ayudante, onUpdate }) => {
           : { ...assignedTask, tarea: { _id: assignedTask.tarea, nombre: 'Tarea no encontrada' } };
       });
       setAssignedTasks(assigned);
-      
-      const available = tareas.filter(task => 
+
+      const available = tareas.filter(task =>
         !assigned.some(assignedTask => assignedTask.tarea._id === task._id)
       );
       setAvailableTasks(available);
@@ -45,7 +45,7 @@ const AssignTasksModal = ({ visible, onClose, ayudante, onUpdate }) => {
   }, [tareas, ayudante.tareasAsignadas]);
 
   const handleAssignTask = useCallback((task) => {
-    setAssignedTasks(prev => [...prev, { tarea: task, horas: task.cantidadHoras, estado: 'Creada' }]);
+    setAssignedTasks(prev => [...prev, { tarea: task, horas: task.cantidadHoras, proceso: 'Creada' }]);
     setAvailableTasks(prev => prev.filter(t => t._id !== task._id));
   }, []);
 
@@ -59,32 +59,37 @@ const AssignTasksModal = ({ visible, onClose, ayudante, onUpdate }) => {
     });
   }, []);
 
+
   const handleUpdateStatus = useCallback((taskId, newStatus) => {
-    setAssignedTasks(prev => 
+    setAssignedTasks(prev =>
       prev.map(t => t.tarea._id === taskId ? { ...t, estado: newStatus } : t)
     );
   }, []);
 
   const handleSave = async () => {
     try {
-      const updatedAyudante = {
-        ...ayudante,
-        tareasAsignadas: assignedTasks.map(t => ({
-          tarea: t.tarea._id,
-          horas: t.horas,
-          estado: t.estado
-        })),
-      };
+        const updatedAyudante = {
+            ...ayudante,
+            tareasAsignadas: assignedTasks.map(t => ({
+                tarea: t.tarea._id,
+                horas: t.horas,
+                proceso: t.estado 
+            })),
+        };
 
-      await updateAyudante(ayudante._id, updatedAyudante);
-      onUpdate(updatedAyudante);
-      onClose();
+        const updatedData = await updateAyudante(ayudante._id, updatedAyudante);
+        onUpdate(updatedData);
+        onClose();
     } catch (err) {
-      setError('Error al guardar los cambios. Por favor, intente de nuevo.');
+        setError('Error al guardar los cambios. Por favor, intente de nuevo.');
+        console.error('Error saving changes:', err);
     }
-  };
+};
 
-  const totalHours = assignedTasks.reduce((total, task) => total + task.horas, 0);
+
+  const totalHours = assignedTasks.reduce((total, task) =>
+    task.proceso === 'Finalizada' ? total + task.horas : total, 0
+  );
 
   const renderAvailableTask = ({ item }) => (
     <View style={styles.taskItem}>
@@ -139,7 +144,7 @@ const AssignTasksModal = ({ visible, onClose, ayudante, onUpdate }) => {
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Asignar Tareas a {ayudante.nombre}</Text>
-          
+
           <Text style={styles.sectionTitle}>Tareas Disponibles</Text>
           <FlatList
             data={availableTasks}
@@ -156,7 +161,7 @@ const AssignTasksModal = ({ visible, onClose, ayudante, onUpdate }) => {
             style={styles.list}
           />
 
-          <Text style={styles.totalHours}>Total de Horas: {totalHours}</Text>
+          <Text style={styles.totalHours}>Total de Horas (finalizadas): {totalHours}</Text>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 

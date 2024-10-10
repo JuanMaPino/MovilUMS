@@ -34,6 +34,7 @@ export default function AyudanteList() {
   if (loading) {
     return (
       <View style={styles.centered}>
+        
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -68,6 +69,7 @@ export default function AyudanteList() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
